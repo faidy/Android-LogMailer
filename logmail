@@ -1,0 +1,23 @@
+#!/bin/bash
+filename="$HOME/Documents/log.txt"
+touch "$filename"
+adb logcat -v time -d > "$filename"
+lasthrdt=$(date --rfc-3339=seconds --date="-1 hour")
+moddh=${lasthrdt:5:8}
+err=0
+errtxt=''
+regex=$moddh"[:][0-9]{2}[:][0-9]{2}[.][0-9]{3}[[:space:]][E][/]"
+
+while read line
+do
+    name=$line
+if [[ $name =~ $regex ]]; then
+	errtxt="$errtxt"$'\n'"$name"
+	err=1
+fi
+done < "$filename"
+
+if [ $err -eq 1 ]; then
+	echo "Sending email"
+mail -s "Error logged" example@mail.com <<< "An error happened, please check the log below"$'\n'"$errtxt"
+fi
